@@ -22,6 +22,69 @@ GeoRAG Chat is an intelligent Q&A system that combines RAG (Retrieval-Augmented 
   - Responsive design
   - Elegant animations
 
+## System Architecture
+
+```mermaid
+graph TB
+    subgraph Frontend
+        UI[Web Interface]
+        WS[WebSocket]
+    end
+
+    subgraph Backend
+        Flask[Flask Server]
+        Upload[File Upload Handler]
+        DocProc[Document Processor]
+        RAG[GeoRAG Agent]
+        DB[PostgreSQL + PostGIS]
+    end
+
+    subgraph Storage
+        FAISS[FAISS Vector Store]
+        Docs[Document Files]
+        subgraph Database
+            Places[Places Table]
+            Geom[Geometry Data]
+            Meta[Metadata]
+        end
+    end
+
+    UI -->|HTTP/WS| Flask
+    Flask -->|Upload| Upload
+    Upload -->|Save| Docs
+    Upload -->|Process| DocProc
+    DocProc -->|Store| FAISS
+    RAG -->|Query| FAISS
+    RAG -->|Query| DB
+    DB -->|Results| RAG
+    FAISS -->|Results| RAG
+    RAG -->|Response| Flask
+    Flask -->|Update| WS
+    WS -->|Display| UI
+
+    classDef storage fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef backend fill:#bbf,stroke:#333,stroke-width:2px;
+    classDef frontend fill:#bfb,stroke:#333,stroke-width:2px;
+    
+    class FAISS,Docs,Database storage;
+    class Flask,Upload,DocProc,RAG,DB backend;
+    class UI,WS frontend;
+```
+
+### Database Schema
+
+```mermaid
+erDiagram
+    PLACES {
+        int id PK
+        string name
+        string name_en
+        string type
+        geometry geom
+        jsonb metadata
+    }
+```
+
 ## System Requirements
 
 - Python 3.8+

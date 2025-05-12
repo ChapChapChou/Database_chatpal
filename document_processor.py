@@ -31,13 +31,13 @@ class DocumentProcessor:
     def load_document(self, file_path: str) -> List[Any]:
         """Load and process a document based on its file extension."""
         try:
-            logger.info(f"开始处理文档: {file_path}")
+            logger.info(f"start loading document: {file_path}")
             
             if not os.path.exists(file_path):
-                raise FileNotFoundError(f"文件不存在: {file_path}")
+                raise FileNotFoundError(f"Document not found: {file_path}")
             
             file_extension = os.path.splitext(file_path)[1].lower()
-            logger.info(f"文件类型: {file_extension}")
+            logger.info(f"Document type: {file_extension}")
             
             # 选择适当的加载器
             if file_extension == '.pdf':
@@ -49,50 +49,50 @@ class DocumentProcessor:
             elif file_extension == '.json':
                 loader = JSONLoader(file_path)
             else:
-                raise ValueError(f"不支持的文件类型: {file_extension}")
+                raise ValueError(f"Unsupported file type: {file_extension}")
 
             # 加载文档
-            logger.info("正在加载文档内容...")
+            logger.info("Loading document content...")
             documents = loader.load()
             
             if not documents:
-                raise ValueError("文档加载后为空")
+                raise ValueError("Document loaded is empty")
             
-            logger.info(f"成功加载文档，共 {len(documents)} 页/段")
+            logger.info(f"Successfully loaded document, {len(documents)} pages/sections")
             
             # 打印文档内容示例（用于调试）
             if documents:
-                logger.info("文档内容示例（前500字符）:")
+                logger.info("Document content example (first 500 characters):")
                 logger.info(documents[0].page_content[:500])
             
             # 处理文档并返回原始文档对象
             return documents
             
         except Exception as e:
-            logger.error(f"处理文档时出错: {str(e)}", exc_info=True)
+            logger.error(f"Error processing document: {str(e)}", exc_info=True)
             raise
 
     def process_documents(self, documents: List[Any]) -> List[Dict[str, Any]]:
         """Process documents into chunks and generate embeddings."""
         try:
-            logger.info("开始分割文档...")
+            logger.info("Starting to split documents...")
             # 分割文档
             chunks = self.text_splitter.split_documents(documents)
-            logger.info(f"文档分割完成，共 {len(chunks)} 个块")
+            logger.info(f"Document splitting completed, {len(chunks)} chunks")
             
             if not chunks:
                 # 如果分割失败，尝试直接使用原始文档
-                logger.warning("文档分割失败，尝试使用原始文档")
+                logger.warning("Document splitting failed, trying to use original document")
                 chunks = documents
             
             # 创建或更新 FAISS 向量存储
-            logger.info("正在创建/更新向量存储...")
+            logger.info("Creating/updating vector store...")
             if self.vectorstore is None:
                 self.vectorstore = FAISS.from_documents(chunks, self.embeddings)
-                logger.info("创建新的向量存储")
+                logger.info("Created new vector store")
             else:
                 self.vectorstore.add_documents(chunks)
-                logger.info("更新现有向量存储")
+                logger.info("Updated existing vector store")
             
             # 保存向量存储
             self.save_vectorstore()
@@ -105,11 +105,11 @@ class DocumentProcessor:
                     'metadata': chunk.metadata
                 })
             
-            logger.info(f"文档处理完成，返回 {len(processed_chunks)} 个处理后的块")
+            logger.info(f"Document processing completed, returning {len(processed_chunks)} processed chunks")
             return processed_chunks
             
         except Exception as e:
-            logger.error(f"处理文档块时出错: {str(e)}", exc_info=True)
+            logger.error(f"Error processing document chunks: {str(e)}", exc_info=True)
             raise
 
     def save_vectorstore(self, path: str = "faiss_index"):
